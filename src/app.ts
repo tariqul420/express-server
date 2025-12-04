@@ -1,4 +1,5 @@
 import express, { Application, NextFunction, Request, Response } from "express";
+import { authRoutes } from "./features/auth/auth.route";
 import { errorHandler } from "./middlewares/error.middleware";
 
 // app initialization
@@ -10,6 +11,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // routes
+app.use("/api/v1/auth", authRoutes);
 
 // unhandled routes
 app.use((req: Request, res: Response, next: NextFunction) => {
