@@ -5,6 +5,8 @@ import { bookingRouters } from "./features/booking/booking.route";
 import { userRouters } from "./features/user/user.route";
 import { vehicleRouters } from "./features/vehicle/vehicle.route";
 import { errorHandler } from "./middlewares/error.middleware";
+import { endpoints } from "./utils/api-documentation";
+import { generateHomePage } from "./views/home-page-template";
 
 // app initialization
 const app: Application = express();
@@ -20,8 +22,9 @@ db()
     process.exit(1);
   });
 
+// Home page route
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello from Express with TypeScript!");
+  res.send(generateHomePage(endpoints));
 });
 
 // routes
