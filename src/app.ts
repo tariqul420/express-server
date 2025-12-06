@@ -1,10 +1,21 @@
 import express, { Application, NextFunction, Request, Response } from "express";
+import db from "./config/db";
 import { authRoutes } from "./features/auth/auth.route";
 import { errorHandler } from "./middlewares/error.middleware";
 
 // app initialization
 const app: Application = express();
 app.use(express.json());
+
+// Initialize database tables
+db()
+  .then(() => {
+    console.log("Database tables initialized successfully");
+  })
+  .catch((error) => {
+    console.error("Failed to initialize database:", error);
+    process.exit(1);
+  });
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from Express with TypeScript!");
