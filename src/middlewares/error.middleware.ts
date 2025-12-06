@@ -6,8 +6,12 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  res.status(err.status || 500).json({
+  const statusCode = err.status || 500;
+  const errorMessage = err?.message || "Internal server error!";
+
+  res.status(statusCode).json({
     success: false,
-    message: err?.message || "Internal server error!",
+    message: errorMessage,
+    errors: errorMessage,
   });
 };
