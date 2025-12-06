@@ -29,11 +29,8 @@ const auth = (...roles: Role[]) => {
       }
 
       next();
-    } catch (err: any) {
-      res.status(500).json({
-        success: false,
-        message: err.message,
-      });
+    } catch (error) {
+     next(error)
     }
   };
 };
