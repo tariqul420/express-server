@@ -1,6 +1,7 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import db from "./config/db";
 import { authRoutes } from "./features/auth/auth.route";
+import { vehicleRouters } from "./features/vehicle/vehicle.route";
 import { errorHandler } from "./middlewares/error.middleware";
 
 // app initialization
@@ -23,6 +24,7 @@ app.get("/", (req: Request, res: Response) => {
 
 // routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/vehicles", vehicleRouters);
 
 // unhandled routes
 app.use((req: Request, res: Response, next: NextFunction) => {
