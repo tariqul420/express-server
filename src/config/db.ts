@@ -33,6 +33,7 @@ const db = async () => {
     vehicle_id INT REFERENCES Vehicles(id) ON DELETE CASCADE,
     rent_start_date DATE NOT NULL,
     rent_end_date DATE NOT NULL CHECK (rent_end_date > rent_start_date),
+    total_price INT NOT NULL CHECK (total_price > 0),
     status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'cancelled', 'returned'))
   );`);
 };

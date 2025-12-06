@@ -19,7 +19,6 @@ const auth = (...roles: Role[]) => {
         token,
         config.jwtSecret as string
       ) as JwtPayload;
-      console.log({ decoded });
       req.user = decoded;
 
       if (roles.length && !roles.includes(decoded.role as Role)) {

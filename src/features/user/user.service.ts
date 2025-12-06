@@ -1,7 +1,7 @@
 import { pool } from "../../config/db";
 
 const getAll = async () => {
-  return await pool.query(`SELECT * FROM Users`);
+  return await pool.query(`SELECT id, name, email, phone, role FROM Users`);
 };
 const updateOne = async (id: string, payload: Record<string, unknown>) => {
   const fields = [];
@@ -26,13 +26,16 @@ const updateOne = async (id: string, payload: Record<string, unknown>) => {
   }
 
   if (fields.length === 0) {
-    return await pool.query(`SELECT * FROM Users WHERE id = $1`, [id]);
+    return await pool.query(
+      `SELECT id, name, email, phone, role FROM Users WHERE id = $1`,
+      [id]
+    );
   }
 
   values.push(id);
   const query = `UPDATE Users SET ${fields.join(
     ", "
-  )} WHERE id=$${index} RETURNING *`;
+  )} WHERE id=$${index} RETURNING id, name, email, phone, role`;
 
   return await pool.query(query, values);
 };
