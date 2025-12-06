@@ -1,5 +1,5 @@
 {
-  "name": "l2a2-express-server",
+  "name": "express-server",
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
