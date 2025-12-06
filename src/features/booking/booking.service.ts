@@ -46,8 +46,66 @@ const postOne = async (payload: Record<string, unknown>) => {
   };
 };
 
-const getAll = async () => {
-  return await pool.query(`SELECT * FROM Bookings`);
+const getAll = async (userRole?: string, userId?: number) => {
+  let query = `
+    SELECT 
+      b.*,
+      u.name as customer_name,
+      u.email as customer_email,
+      v.vehicle_name,
+      v.registration_number,
+      v.type as vehicle_type
+    FROM Bookings b
+    LEFT JOIN Users u ON b.customer_id = u.id
+    LEFT JOIN Vehicles v ON b.vehicle_id = v.id
+  `;
+
+  const params: any[] = [];
+
+  if (userRole === "customer" && userId) {
+    query += ` WHERE b.customer_id = $1`;
+    params.push(userId);
+  }
+
+  const result = await pool.query(query, params);
+
+  const formattedData = result.rows.map((row) => {
+    if (userRole === "admin") {
+      return {
+        id: row.id,
+        customer_id: row.customer_id,
+        vehicle_id: row.vehicle_id,
+        rent_start_date: row.rent_start_date,
+        rent_end_date: row.rent_end_date,
+        total_price: row.total_price,
+        status: row.status,
+        customer: {
+          name: row.customer_name,
+          email: row.customer_email,
+        },
+        vehicle: {
+          vehicle_name: row.vehicle_name,
+          registration_number: row.registration_number,
+        },
+      };
+    } else {
+      return {
+        id: row.id,
+        vehicle_id: row.vehicle_id,
+        rent_start_date: row.rent_start_date,
+        rent_end_date: row.rent_end_date,
+        total_price: row.total_price,
+        status: row.status,
+        vehicle: {
+          vehicle_name: row.vehicle_name,
+          registration_number: row.registration_number,
+          type: row.vehicle_type,
+        },
+      };
+    }
+  });
+
+  return { rows: formattedData };
 };
 
 async function updateOne(id: string, payload: Record<string, unknown>) {

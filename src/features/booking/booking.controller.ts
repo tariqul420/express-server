@@ -17,11 +17,17 @@ const postOne = async (req: Request, res: Response, next: NextFunction) => {
 
 const getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await bookingServices.getAll();
+    const user = req.user;
+    const result = await bookingServices.getAll(user?.role, user?.userId);
+
+    const message =
+      user?.role === "customer"
+        ? "Your bookings retrieved successfully"
+        : "Bookings retrieved successfully";
 
     res.status(200).json({
       success: true,
-      message: "Bookings retrieved successfully",
+      message,
       data: result.rows,
     });
   } catch (error) {

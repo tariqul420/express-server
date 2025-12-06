@@ -33,7 +33,7 @@ const signin = async (
   const { email: userEmail, role, id, name, phone } = user;
 
   const token = jwt.sign(
-    { email: userEmail, role },
+    { userId: id, email: userEmail, role },
     config.jwtSecret as string,
     { expiresIn: "7d" }
   );
