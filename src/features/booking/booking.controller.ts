@@ -38,13 +38,27 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { bookingId } = req.params;
+    const user = req.user;
+    const { status } = req.body;
 
-    const result = await bookingServices.updateOne(bookingId, req.body);
+    const result = await bookingServices.updateOne(
+      bookingId,
+      req.body,
+      user?.role,
+      user?.userId
+    );
+
+    let message = "Booking updated successfully";
+    if (status === "cancelled") {
+      message = "Booking cancelled successfully";
+    } else if (status === "returned") {
+      message = "Booking marked as returned. Vehicle is now available";
+    }
 
     res.status(200).json({
       success: true,
-      message: "Booking cancelled successfully",
-      data: result.rows,
+      message,
+      data: result.rows[0],
     });
   } catch (error) {
     next(error);

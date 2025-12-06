@@ -108,13 +108,75 @@ const getAll = async (userRole?: string, userId?: number) => {
   return { rows: formattedData };
 };
 
-async function updateOne(id: string, payload: Record<string, unknown>) {
+async function updateOne(
+  id: string,
+  payload: Record<string, unknown>,
+  userRole?: string,
+  userId?: number
+) {
   const { status } = payload;
 
-  return await pool.query(
+  const validStatuses = ["active", "cancelled", "returned"];
+  if (!validStatuses.includes(status as string)) {
+    throw new Error(
+      `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+    );
+  }
+
+  const bookingResult = await pool.query(`SELECT * FROM Bookings WHERE id=$1`, [
+    id,
+  ]);
+
+  if (bookingResult.rows.length === 0) {
+    throw new Error("Booking not found");
+  }
+
+  const booking = bookingResult.rows[0];
+
+  if (userRole === "customer") {
+    if (booking.customer_id !== userId) {
+      throw new Error("You can only cancel your own bookings");
+    }
+
+    if (status !== "cancelled") {
+      throw new Error("Customers can only cancel bookings");
+    }
+
+    const today = new Date();
+    const startDate = new Date(booking.rent_start_date);
+    if (startDate <= today) {
+      throw new Error("Cannot cancel booking that has already started");
+    }
+  }
+
+  const result = await pool.query(
     `UPDATE Bookings SET status=$1 WHERE id=$2 RETURNING *`,
-    [status]
+    [status, id]
   );
+
+  let vehicleStatus = null;
+  if (status === "cancelled" || status === "returned") {
+    await pool.query(`UPDATE Vehicles SET availability_status=$1 WHERE id=$2`, [
+      "available",
+      booking.vehicle_id,
+    ]);
+    vehicleStatus = "available";
+  }
+
+  if (status === "returned" && vehicleStatus) {
+    return {
+      rows: [
+        {
+          ...result.rows[0],
+          vehicle: {
+            availability_status: vehicleStatus,
+          },
+        },
+      ],
+    };
+  }
+
+  return result;
 }
 
 export const bookingServices = {
