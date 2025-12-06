@@ -8,6 +8,6 @@ router.post("/", vehicleControllers.postOne);
 router.get("/", vehicleControllers.getAll);
 router.get("/:vehicleId", vehicleControllers.getOne);
 router.put("/:vehicleId", vehicleControllers.updateOne);
-router.post("/:vehicleId", vehicleControllers.deleteOne);
+router.delete("/:vehicleId", vehicleControllers.deleteOne);
 
 export const vehicleRouters = router;
