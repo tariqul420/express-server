@@ -3,19 +3,12 @@ import { vehicleServices } from "./vehicle.service";
 
 const postOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await vehicleServices.postOne();
+    const result = await vehicleServices.postOne(req.body);
 
     res.status(201).json({
       success: true,
       message: "Vehicle created successfully",
-      data: {
-        id: 1,
-        vehicle_name: "Toyota Camry 2024",
-        type: "car",
-        registration_number: "ABC-1234",
-        daily_rent_price: 50,
-        availability_status: "available",
-      },
+      data: result.rows[0],
     });
   } catch (error) {
     next(error);
@@ -26,27 +19,18 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await vehicleServices.getAll();
 
+    if (result.rowCount === 0) {
+      res.status(200).json({
+        success: true,
+        message: "No vehicles found",
+        data: [],
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Vehicles retrieved successfully",
-      data: [
-        {
-          id: 1,
-          vehicle_name: "Toyota Camry 2024",
-          type: "car",
-          registration_number: "ABC-1234",
-          daily_rent_price: 50,
-          availability_status: "available",
-        },
-        {
-          id: 2,
-          vehicle_name: "Honda Civic 2023",
-          type: "car",
-          registration_number: "XYZ-5678",
-          daily_rent_price: 45,
-          availability_status: "available",
-        },
-      ],
+      data: result.rows,
     });
   } catch (error) {
     next(error);
@@ -57,19 +41,12 @@ const getOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { vehicleId } = req.params;
 
-    const result = await vehicleServices.getOne();
+    const result = await vehicleServices.getOne(vehicleId);
 
     res.status(200).json({
       success: true,
       message: "Vehicle retrieved successfully",
-      data: {
-        id: 2,
-        vehicle_name: "Honda Civic 2023",
-        type: "car",
-        registration_number: "XYZ-5678",
-        daily_rent_price: 45,
-        availability_status: "available",
-      },
+      data: result.rows[0],
     });
   } catch (error) {
     next(error);
@@ -80,19 +57,12 @@ const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { vehicleId } = req.params;
 
-    const result = await vehicleServices.updateOne();
+    const result = await vehicleServices.updateOne(vehicleId, req.body);
 
     res.status(200).json({
       success: true,
       message: "Vehicle updated successfully",
-      data: {
-        id: 1,
-        vehicle_name: "Toyota Camry 2024 Premium",
-        type: "car",
-        registration_number: "ABC-1234",
-        daily_rent_price: 55,
-        availability_status: "available",
-      },
+      data: result.rows[0],
     });
   } catch (error) {
     next(error);
@@ -103,7 +73,7 @@ const deleteOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { vehicleId } = req.params;
 
-    const result = await vehicleServices.deleteOne();
+    await vehicleServices.deleteOne(vehicleId);
 
     res.status(200).json({
       success: true,
