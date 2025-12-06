@@ -9,7 +9,7 @@ const postOne = async (payload: Record<string, unknown>) => {
     availability_status,
   } = payload;
 
-  return pool.query(
+  return await pool.query(
     `INSERT INTO Vehicles(vehicle_name, type, registration_number, daily_rent_price, availability_status) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
     [
       vehicle_name,

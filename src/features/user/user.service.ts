@@ -1,7 +1,7 @@
 import { pool } from "../../config/db";
 
 const getAll = async () => {
-  return pool.query(`SELECT * FROM Users`);
+  return await pool.query(`SELECT * FROM Users`);
 };
 const updateOne = async (id: string, payload: Record<string, unknown>) => {
   const fields = [];
