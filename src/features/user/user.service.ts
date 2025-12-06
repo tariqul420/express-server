@@ -3,7 +3,21 @@ import { pool } from "../../config/db";
 const getAll = async () => {
   return await pool.query(`SELECT id, name, email, phone, role FROM Users`);
 };
-const updateOne = async (id: string, payload: Record<string, unknown>) => {
+const updateOne = async (
+  id: string,
+  payload: Record<string, unknown>,
+  userRole?: string,
+  userId?: number
+) => {
+  const userCheck = await pool.query(`SELECT * FROM Users WHERE id = $1`, [id]);
+  if (userCheck.rows.length === 0) {
+    throw new Error("User not found");
+  }
+
+  if (userRole === "customer" && userId !== parseInt(id)) {
+    throw new Error("You can only update your own profile");
+  }
+
   const fields = [];
   const values = [];
   let index = 1;
@@ -20,7 +34,11 @@ const updateOne = async (id: string, payload: Record<string, unknown>) => {
     fields.push(`phone=$${index++}`);
     values.push(payload.phone);
   }
+
   if (payload.role) {
+    if (userRole !== "admin") {
+      throw new Error("Only admins can update user roles");
+    }
     fields.push(`role=$${index++}`);
     values.push(payload.role);
   }

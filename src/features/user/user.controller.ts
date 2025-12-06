@@ -18,8 +18,14 @@ const getAll = async (req: Request, res: Response, next: NextFunction) => {
 const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
+    const user = req?.user;
 
-    const result = await userServices.updateOne(userId, req.body);
+    const result = await userServices.updateOne(
+      userId,
+      req.body,
+      user?.role,
+      user?.userId
+    );
 
     res.status(200).json({
       success: true,
