@@ -26,10 +26,24 @@ const getAll = async () => {
 };
 
 const getOne = async (id: string) => {
-  return await pool.query(`SELECT * FROM Vehicles WHERE id = $1`, [id]);
+  const result = await pool.query(`SELECT * FROM Vehicles WHERE id = $1`, [id]);
+
+  if (result.rows.length === 0) {
+    throw new Error("Vehicle not found");
+  }
+
+  return result;
 };
 
 const updateOne = async (id: string, payload: Record<string, unknown>) => {
+  const vehicleCheck = await pool.query(
+    `SELECT * FROM Vehicles WHERE id = $1`,
+    [id]
+  );
+  if (vehicleCheck.rows.length === 0) {
+    throw new Error("Vehicle not found");
+  }
+
   const fields = [];
   const values = [];
   let index = 1;
@@ -56,7 +70,7 @@ const updateOne = async (id: string, payload: Record<string, unknown>) => {
   }
 
   if (fields.length === 0) {
-    return await pool.query(`SELECT * FROM Vehicles WHERE id = $1`, [id]);
+    return vehicleCheck;
   }
 
   values.push(id);
@@ -68,7 +82,29 @@ const updateOne = async (id: string, payload: Record<string, unknown>) => {
 };
 
 const deleteOne = async (id: string) => {
-  return await pool.query(`DELETE FROM Vehicles WHERE id = $1`, [id]);
+  const vehicleCheck = await pool.query(
+    `SELECT * FROM Vehicles WHERE id = $1`,
+    [id]
+  );
+  if (vehicleCheck.rows.length === 0) {
+    throw new Error("Vehicle not found");
+  }
+
+  const activeBookingsCheck = await pool.query(
+    `SELECT * FROM Bookings WHERE vehicle_id = $1 AND status = 'active'`,
+    [id]
+  );
+
+  if (activeBookingsCheck.rows.length > 0) {
+    throw new Error(
+      "Cannot delete vehicle with active bookings. Please complete or cancel all bookings first."
+    );
+  }
+
+  return await pool.query(
+    `DELETE FROM Vehicles WHERE id = $1 RETURNING id, vehicle_name, registration_number`,
+    [id]
+  );
 };
 
 export const vehicleServices = {

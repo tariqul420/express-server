@@ -6,11 +6,24 @@ import config from "../../config/env";
 const signup = async (payload: Record<string, unknown>) => {
   const { name, email, password, phone, role } = payload;
 
+  const existingUser = await pool.query(
+    `SELECT email FROM Users WHERE email = $1`,
+    [email]
+  );
+
+  if (existingUser.rows.length > 0) {
+    throw new Error("User with this email already exists");
+  }
+
+  if ((password as string).length < 6) {
+    throw new Error("Password must be at least 6 characters long");
+  }
+
   const hashedPass = await bcrypt.hash(password as string, 10);
 
   return await pool.query(
     `INSERT INTO Users(name, email, password, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, phone, role`,
-    [name, email, hashedPass, phone, role]
+    [name, (email as string).toLowerCase(), hashedPass, phone, role]
   );
 };
 

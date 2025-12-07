@@ -59,7 +59,26 @@ const updateOne = async (
 };
 
 const deleteOne = async (id: string) => {
-  return await pool.query(`DELETE FROM Users WHERE id = $1`, [id]);
+  const userCheck = await pool.query(`SELECT * FROM Users WHERE id = $1`, [id]);
+  if (userCheck.rows.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const activeBookingsCheck = await pool.query(
+    `SELECT * FROM Bookings WHERE customer_id = $1 AND status = 'active'`,
+    [id]
+  );
+
+  if (activeBookingsCheck.rows.length > 0) {
+    throw new Error(
+      "Cannot delete user with active bookings. Please cancel or complete all bookings first."
+    );
+  }
+
+  return await pool.query(
+    `DELETE FROM Users WHERE id = $1 RETURNING id, name, email`,
+    [id]
+  );
 };
 
 export const userServices = {

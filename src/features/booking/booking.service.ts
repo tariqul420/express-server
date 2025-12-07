@@ -3,8 +3,9 @@ import { pool } from "../../config/db";
 const postOne = async (payload: Record<string, unknown>) => {
   const { customer_id, vehicle_id, rent_start_date, rent_end_date } = payload;
 
+  // Check if vehicle exists and get its details
   const vehicleQuery = `
-    SELECT vehicle_name, daily_rent_price 
+    SELECT vehicle_name, daily_rent_price, availability_status 
     FROM Vehicles 
     WHERE id = $1
   `;
@@ -15,6 +16,36 @@ const postOne = async (payload: Record<string, unknown>) => {
   }
 
   const vehicle = vehicleResult.rows[0];
+
+  // Check if vehicle is available
+  if (vehicle.availability_status !== "available") {
+    throw new Error("Vehicle is not available for booking");
+  }
+
+  // Check for overlapping bookings
+  const overlapQuery = `
+    SELECT * FROM Bookings 
+    WHERE vehicle_id = $1 
+    AND status IN ('active', 'booked')
+    AND (
+      (rent_start_date <= $2 AND rent_end_date >= $2) OR
+      (rent_start_date <= $3 AND rent_end_date >= $3) OR
+      (rent_start_date >= $2 AND rent_end_date <= $3)
+    )
+  `;
+  const overlapResult = await pool.query(overlapQuery, [
+    vehicle_id,
+    rent_start_date,
+    rent_end_date,
+  ]);
+
+  if (overlapResult.rows.length > 0) {
+    throw new Error(
+      "Vehicle is already booked for the selected dates. Please choose different dates."
+    );
+  }
+
+  // Calculate total price
   const startDate = new Date(rent_start_date as string);
   const endDate = new Date(rent_end_date as string);
   const durationDays = Math.ceil(
@@ -22,6 +53,7 @@ const postOne = async (payload: Record<string, unknown>) => {
   );
   const totalPrice = vehicle.daily_rent_price * durationDays;
 
+  // Create booking
   const bookingQuery = `
     INSERT INTO Bookings (
       customer_id, 
@@ -43,6 +75,13 @@ const postOne = async (payload: Record<string, unknown>) => {
     totalPrice,
     "active",
   ]);
+
+  const updateVehicleQuery = `
+    UPDATE Vehicles 
+    SET availability_status = 'booked' 
+    WHERE id = $1
+  `;
+  await pool.query(updateVehicleQuery, [vehicle_id]);
 
   return {
     rows: [
